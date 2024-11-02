@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Autónomo</title>
+    <style>
+        /* CSS existente */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            max-width: 600px;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        .mt-5 { margin-top: 3rem !important; }
+        .text-center { text-align: center !important; }
+        .text-left { text-align: left !important;}
+        .form-label { display: inline-block; margin-bottom: .5rem; font-size: 0.875rem; }
+        .form-control {
+            display: block;
+            width: 100%;
+            height: calc(1.5em + .75rem + 2px);
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 .2rem rgba(0, 123, 255, .25);
+        }
+        .form-group { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .btn {
+            display: inline-block;
+            font-weight: 400;
+            color: #fff;
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-color: #007bff;
+            border: 1px solid #007bff;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: .25rem;
+            transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover { background-color: #0056b3; border-color: #004085; }
+        .mt-4 { margin-top: 1.5rem !important; }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-right: 15px;
+            padding-left: 15px;
+            box-sizing: border-box;
+        }
+        .form-switch { display: flex; align-items: center; margin-bottom: 1rem; }
+        .form-switch input { margin-left: 10px; }
+    </style>
+    <script>
+        function obtenerCuotaAutonomo(año) {
+            if (año === 'primer') return 80; // Tarifa Plana
+            if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+            return 300; // Cuota normal aproximada
+        }
+
+        function obtenerPorcentajeIRPF(año) {
+            return (año === 'primer') ? 7 : 15; // IRPF según el año
+        }
+
+        function calcularPrecioHora() {
+            const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
+            const año = document.getElementById('anioAutonomo').value;
+            const cuotaAutonomo = obtenerCuotaAutonomo(año);
+            const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
+            const gastos100 = parseFloat(document.getElementById('gastos100').value);
+            const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
+            const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
+            const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
+            const incluirIVA = document.getElementById('incluirIVA').checked;
+            let porcentajeIVA = 0;
+            
+            if (incluirIVA) {
+                porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
+            }
+
+            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
+            const gastosMensuales = gastos100 + gastosParciales * (1 - 0.30); // Aplicando un 30% de deducción a gastos parciales
+            const sueldoBrutoMensual = sueldoNetoMensual / (1 - (obtenerPorcentajeIRPF(año) / 100));
+            const totalMensual = sueldoBrutoMensual + cuotaAutonomo + gastosMensuales;
+            const precioHora = incluirIVA ? totalMensual / horasTrabajadas * (1 + porcentajeIVA / 100) : totalMensual / horasTrabajadas;
+
+            const sueldoAnualNeto = sueldoNetoMensual * 12;
+            const irpfMensual = sueldoBrutoMensual * (obtenerPorcentajeIRPF(año) / 100);
+
+            document.getElementById('resultado').innerHTML = `
+                <ul class="text-left">
+                    <li>Precio por hora: ${precioHora.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Porcentaje IRPF: ${obtenerPorcentajeIRPF(año)}%</li>
+                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
+                    <li>Sueldo anual neto: ${sueldoAnualNeto.toFixed(2)} euros</li>
+                </ul>
+            `;
+        }
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Calculadora de Autónomo</h1>
+        <form onsubmit="event.preventDefault(); calcularPrecioHora();" class="mt-4">
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="baseCotizacion" class="form-label">Base de Cotización:</label>
+                    <input type="number" class="form-control" id="baseCotizacion" value="1080" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="anioAutonomo" class="form-label">Años como Autónomo:</label>
+                    <select class="form-control" id="anioAutonomo" required>
+                        <option value="primer">Primer Año</option>
+                        <option value="segundo">Segundo Año</option>
+                        <option value="resto">Resto</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="sueldoNetoMensual" class="form-label">Sueldo Neto Mensual:</label>
+                    <input type="number" class="form-control" id="sueldoNetoMensual" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="gastos100" class="form-label">Gastos Deducibles al 100%:</label>
+                    <input type="number" class="form-control" id="gastos100" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="gastosParciales" class="form-label">Gastos Deducibles Parciales:</label>
+                    <input type="number" class="form-control" id="gastosParciales" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
+                    <input type="number" class="form-control" id="horasPorDia" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
+                    <input type="number" class="form-control" id="diasPorSemana" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
+                    <input type="number" class="form-control" id="porcentajeIVA">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3 form-switch">
+                    <label for="incluirIVA" class="form-label">Incluir IVA:</label>
+                    <input type="checkbox" class="form-check-input" id="incluirIVA">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Calcular</button>
+        </form>
+        
+        <p class="mt-4 text-center" id="resultado"></p>
+    </div>
+</body>
+</html>
