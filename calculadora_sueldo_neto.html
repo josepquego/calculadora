@@ -111,7 +111,7 @@
             }
 
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosParciales * (1 - 0.30); // Incluyendo gastos parciales con deducción
+            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + (gastosParciales * (1 - 0.30)); // Incluyendo gastos parciales con deducción
             const porcentajeIRPF = obtenerPorcentajeIRPF(año);
             const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - gastosParciales;
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
