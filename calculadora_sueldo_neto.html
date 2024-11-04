@@ -84,60 +84,63 @@
         .form-switch { display: flex; align-items: center; margin-bottom: 1rem; }
         .form-switch input { margin-left: 10px; }
     </style>
-       <script>
-            function obtenerCuotaAutonomo(año, baseCotizacion) {
-                if (año === 'primer') return 80; // Tarifa Plana
-                if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+    <script>
+        function obtenerCuotaAutonomo(año, baseCotizacion) {
+            if (año === 'primer') return 80; // Tarifa Plana
+            if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+        
+            // A partir del tercer año, usar la base de cotización
+            if (baseCotizacion <= 1000) return 300; // Cuota para base baja
+            if (baseCotizacion <= 1500) return 350; // Cuota para base media
+            if (baseCotizacion <= 2000) return 400; // Cuota para base alta
+            return 450; // Cuota para base muy alta
+        }
+    
+        function obtenerPorcentajeIRPF(año, baseCotizacion) {
+            if (año === 'primer') return 7;
+            if (año === 'segundo') return 15;
+        
+            // A partir del tercer año, ajustar el IRPF según la base de cotización
+            if (baseCotizacion <= 1000) return 15; // IRPF para base baja
+            if (baseCotizacion <= 1500) return 20; // IRPF para base media
+            if (baseCotizacion <= 2000) return 25; // IRPF para base alta
+            return 30; // IRPF para base muy alta
+        }
+
+        function calcularSueldoNeto() {
+            const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
+            const año = document.getElementById('anioAutonomo').value;
+            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
+            const precioHora = parseFloat(document.getElementById('precioHora').value);
+            const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
+            const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
+            const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
+            const incluirIVA = document.getElementById('incluirIVA').checked;
+            let porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             
-                // A partir del tercer año, usar la base de cotización
-                if (baseCotizacion <= 1000) return 300; // Cuota para base baja
-                if (baseCotizacion <= 1500) return 350; // Cuota para base media
-                if (baseCotizacion <= 2000) return 400; // Cuota para base alta
-                return 450; // Cuota para base muy alta
+            if (incluirIVA) {
+                porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             }
-    
-    
-            function obtenerPorcentajeIRPF(año, baseCotizacion) {
-                if (año === 'primer') return 7;
-                if (año === 'segundo') return 15;
-            
-                // A partir del tercer año, ajustar el IRPF según la base de cotización
-                if (baseCotizacion <= 1000) return 15; // IRPF para base baja
-                if (baseCotizacion <= 1500) return 20; // IRPF para base media
-                if (baseCotizacion <= 2000) return 25; // IRPF para base alta
-                return 30; // IRPF para base muy alta
-            }
-    
-    
-            function calcularPrecioHora() {
-                const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
-                const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
-                const año = document.getElementById('anioAutonomo').value;
-                const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
-                const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
-                const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
-                const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
-    
-                const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-                const gastosDeducidos = (gastosParciales * (1 - 0.30));
-                const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
-                const sueldoBrutoMensual = sueldoNetoMensual + cuotaAutonomo + gastosDeducidos; // Ajustar el sueldo bruto
-                const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
-                const precioHora = (sueldoBrutoMensual - irpfMensual) / horasTrabajadas;
-    
-                document.getElementById('resultado').innerHTML = 
-                    <ul class="text-left">
-                        <li>Precio por Hora: ${precioHora.toFixed(2)} euros</li>
-                        <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
-                        <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
-                        <li>Gastos mensuales: ${gastosDeducidos.toFixed(2)} euros</li>
-                        <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
-                        <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
-                        <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
-                    </ul>
-                ;
-            }
-        </script>
+
+            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
+            const gastosDeducidos = (gastosParciales * (1 - 0.30));
+            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
+            const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
+            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
+            const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
+
+            document.getElementById('resultado').innerHTML = 
+                <ul class="text-left">
+                    <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Gastos mensuales: ${gastosDeducidos.toFixed(2)} euros</li>
+                    <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
+                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
+                    <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
+                </ul>
+            ;
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
