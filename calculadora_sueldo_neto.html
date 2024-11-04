@@ -140,44 +140,54 @@
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Calculadora de Sueldo Neto</h1>
-        <div class="form-group">
-            <label for="baseCotizacion" class="form-label">Base de Cotización:</label>
-            <input type="number" id="baseCotizacion" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="precioHora" class="form-label">Precio por Hora:</label>
-            <input type="number" id="precioHora" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="gastosParciales" class="form-label">Gastos Parciales:</label>
-            <input type="number" id="gastosParciales" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="horasPorDia" class="form-label">Horas por Día:</label>
-            <input type="number" id="horasPorDia" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="diasPorSemana" class="form-label">Días por Semana:</label>
-            <input type="number" id="diasPorSemana" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="anioAutonomo" class="form-label">Año como Autónomo:</label>
-            <select id="anioAutonomo" class="form-control" required>
-                <option value="primer">Primer Año</option>
-                <option value="segundo">Segundo Año</option>
-                <option value="tercer">Tercer Año y Posteriores</option>
-            </select>
-        </div>
-        <div class="form-switch">
-            <label for="incluirIVA" class="form-label">Incluir IVA:</label>
-            <input type="checkbox" id="incluirIVA" class="form-control">
-        </div>
-        <div class="form-group" id="ivaDiv" style="display: none;">
-            <label for="porcentajeIVA" class="form-label">Porcentaje de IVA:</label>
-            <input type="number" id="porcentajeIVA" class="form-control" value="21">
-        </div>
-        <button class="btn mt-4" onclick="calcularSueldoNeto()">Calcular</button>
-        <div id="resultado" class="mt-4 text-center"></div>
+        <form onsubmit="event.preventDefault(); calcularSueldoNeto();" class="mt-4">
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="baseCotizacion" class="form-label">Base de Cotización:</label>
+                    <input type="number" class="form-control" id="baseCotizacion" value="1080" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="anioAutonomo" class="form-label">Años como Autónomo:</label>
+                    <select class="form-control" id="anioAutonomo" required>
+                        <option value="primer">Primer Año</option>
+                        <option value="segundo">Segundo Año</option>
+                        <option value="resto">Resto</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="precioHora" class="form-label">Precio por Hora:</label>
+                    <input type="number" class="form-control" id="precioHora" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="gastosParciales" class="form-label">Gastos Deducibles Parciales:</label>
+                    <input type="number" class="form-control" id="gastosParciales" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
+                    <input type="number" class="form-control" id="horasPorDia" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
+                    <input type="number" class="form-control" id="diasPorSemana" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
+                    <input type="number" class="form-control" id="porcentajeIVA" value="0">
+                </div>
+                <div class="form-switch">
+                    <label class="form-label" for="incluirIVA">¿Incluir IVA?</label>
+                    <input type="checkbox" id="incluirIVA">
+                </div>
+            </div>
+            <button type="submit" class="btn">Calcular Sueldo Neto</button>
+        </form>
+        <div class="mt-4 text-left" id="resultado"></div>
     </div>
     <script>
         document.getElementById('incluirIVA').addEventListener('change', function() {
