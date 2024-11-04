@@ -114,7 +114,7 @@
             const gastosDeducidos = (gastosParciales * (1 - 0.30));
             const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
             const porcentajeIRPF = obtenerPorcentajeIRPF(año);
-            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - gastosDeducidos;
+            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
 
             document.getElementById('resultado').innerHTML = `
