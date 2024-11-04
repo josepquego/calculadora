@@ -129,7 +129,7 @@
             const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
 
-            document.getElementById('resultado').innerHTML = 
+            document.getElementById('resultado').innerHTML = `
                 <ul class="text-left">
                     <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
                     <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
@@ -137,7 +137,7 @@
                     <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
                     <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
                     <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
-                </ul>
+                </ul>`
             ;
         }
     </script>
