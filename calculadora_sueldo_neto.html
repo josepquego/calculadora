@@ -104,16 +104,17 @@
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
             const incluirIVA = document.getElementById('incluirIVA').checked;
-            let porcentajeIVA = 0;
+            let porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             
             if (incluirIVA) {
                 porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             }
 
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + (gastosParciales * (1 - 0.30)); // Incluyendo gastos parciales con deducción
+            const gastosDeducidos = (gastosParciales * (1 - 0.30));
+            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
             const porcentajeIRPF = obtenerPorcentajeIRPF(año);
-            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - gastosParciales;
+            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - gastosDeducidos;
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
 
             document.getElementById('resultado').innerHTML = `
@@ -169,7 +170,7 @@
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
-                    <input type="number" class="form-control" id="porcentajeIVA" value="21">
+                    <input type="number" class="form-control" id="porcentajeIVA" value="0">
                 </div>
                 <div class="form-switch">
                     <label class="form-label" for="incluirIVA">¿Incluir IVA?</label>
