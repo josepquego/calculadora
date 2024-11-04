@@ -114,7 +114,7 @@
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
     
             // Cálculo de gastos mensuales
-            const gastosMensuales = gastos100 + (gastosParciales * 0.30); // 30% deducible de gastos parciales
+            const gastosMensuales = (gastosParciales * 0.30); // 30% deducible de gastos parciales
     
             // Estimación inicial del sueldo bruto
             let sueldoBrutoMensual = sueldoNetoMensual;
@@ -172,12 +172,6 @@
                     <input type="number" class="form-control" id="sueldoNetoMensual" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
-                    <label for="gastos100" class="form-label">Gastos Deducibles al 100%:</label>
-                    <input type="number" class="form-control" id="gastos100" required>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group col-md-6 mb-3">
                     <label for="gastosParciales" class="form-label">Gastos Deducibles Parciales:</label>
                     <input type="number" class="form-control" id="gastosParciales" required>
                 </div>
@@ -185,8 +179,6 @@
                     <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
                     <input type="number" class="form-control" id="horasPorDia" required>
                 </div>
-            </div>
-            <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
                     <input type="number" class="form-control" id="diasPorSemana" required>
@@ -195,8 +187,6 @@
                     <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
                     <input type="number" class="form-control" id="porcentajeIVA">
                 </div>
-            </div>
-            <div class="row">
                 <div class="form-group col-md-6 mb-3 form-switch">
                     <label for="incluirIVA" class="form-label">Incluir IVA:</label>
                     <input type="checkbox" class="form-check-input" id="incluirIVA">
