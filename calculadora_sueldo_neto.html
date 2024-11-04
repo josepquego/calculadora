@@ -112,7 +112,7 @@
         function calcularSueldoNeto() {
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
             const año = document.getElementById('anioAutonomo').value;
-            const cuotaAutonomo = obtenerCuotaAutonomo(año);
+            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
             const precioHora = parseFloat(document.getElementById('precioHora').value);
             const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
@@ -127,7 +127,7 @@
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
             const gastosDeducidos = (gastosParciales * (1 - 0.30));
             const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
-            const porcentajeIRPF = obtenerPorcentajeIRPF(año);
+            const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
             const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
 
