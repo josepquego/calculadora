@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Precio / Hora</title>
+    <title>Calculadora de Precio / hora</title>
     <style>
         /* CSS existente */
         body {
@@ -90,58 +90,36 @@
             if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
             return 300; // Cuota normal aproximada
         }
-    
+
         function obtenerPorcentajeIRPF(año) {
             return (año === 'primer') ? 7 : 15; // IRPF según el año
         }
-    
-        function calcularPrecioHora() {
+
+        function calcularPrecioPorHora() {
+            const sueldoNetoDeseado = parseFloat(document.getElementById('sueldoNeto').value);
             const año = document.getElementById('anioAutonomo').value;
             const cuotaAutonomo = obtenerCuotaAutonomo(año);
-            const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
             const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
             const incluirIVA = document.getElementById('incluirIVA').checked;
             let porcentajeIVA = 0;
-    
+            
             if (incluirIVA) {
                 porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             }
-    
-            // Cálculo de horas trabajadas en un mes
-            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-    
-            // Cálculo de gastos mensuales
-            const gastosMensuales = (gastosParciales * 0.30); // 30% deducible de gastos parciales
-    
-            // Estimación inicial del sueldo bruto
-            let sueldoBrutoMensual = sueldoNetoMensual;
-    
-            // Calculo del porcentaje de IRPF
+
             const porcentajeIRPF = obtenerPorcentajeIRPF(año);
-    
-            // Ajuste del sueldo bruto para cubrir todos los gastos
-            let totalMensual;
-            do {
-                totalMensual = sueldoBrutoMensual + cuotaAutonomo + gastosMensuales;
-                sueldoBrutoMensual = totalMensual / (1 - (porcentajeIRPF / 100));
-            } while (Math.abs(totalMensual - (sueldoBrutoMensual + cuotaAutonomo + gastosMensuales)) > 0.01);
-    
-            // Cálculo del precio por hora
-            const precioHora = incluirIVA ? totalMensual / horasTrabajadas * (1 + porcentajeIVA / 100) : totalMensual / horasTrabajadas;
-    
-            const sueldoAnualNeto = sueldoNetoMensual * 12;
-            const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
-    
-            // Mostrar resultados
+            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
+            const sueldoBrutoNecesario = (sueldoNetoDeseado + gastosParciales + cuotaAutonomo) / (1 - porcentajeIRPF / 100); // Calcula el sueldo bruto para cubrir el neto deseado
+            const precioPorHora = sueldoBrutoNecesario / horasTrabajadas;
+
             document.getElementById('resultado').innerHTML = `
                 <ul class="text-left">
-                    <li>Precio por hora: ${precioHora.toFixed(2)} euros</li>
-                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Precio por Hora Necesario: ${precioPorHora.toFixed(2)} euros</li>
+                    <li>Sueldo Bruto Necesario: ${sueldoBrutoNecesario.toFixed(2)} euros</li>
                     <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
-                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
-                    <li>Sueldo anual neto: ${sueldoAnualNeto.toFixed(2)} euros</li>
+                    <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
                 </ul>
             `;
         }
@@ -149,12 +127,12 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">Precio / Hora</h1>
-        <form onsubmit="event.preventDefault(); calcularPrecioHora();" class="mt-4">
+        <h1 class="text-center">Calculadora de Precio / hora</h1>
+        <form onsubmit="event.preventDefault(); calcularPrecioPorHora();" class="mt-4">
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="baseCotizacion" class="form-label">Base de Cotización:</label>
-                    <input type="number" class="form-control" id="baseCotizacion" value="1080" required>
+                    <label for="sueldoNeto" class="form-label">Sueldo Neto Mensual Deseado:</label>
+                    <input type="number" class="form-control" id="sueldoNeto" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
                     <label for="anioAutonomo" class="form-label">Años como Autónomo:</label>
@@ -167,34 +145,31 @@
             </div>
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="sueldoNetoMensual" class="form-label">Sueldo Neto Mensual:</label>
-                    <input type="number" class="form-control" id="sueldoNetoMensual" required>
-                </div>
-                <div class="form-group col-md-6 mb-3">
-                    <label for="gastosParciales" class="form-label">Gastos Deducibles:</label>
+                    <label for="gastosParciales" class="form-label">Gastos Deducibles Parciales:</label>
                     <input type="number" class="form-control" id="gastosParciales" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
                     <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
                     <input type="number" class="form-control" id="horasPorDia" required>
                 </div>
+            </div>
+            <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
                     <input type="number" class="form-control" id="diasPorSemana" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
                     <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
-                    <input type="number" class="form-control" id="porcentajeIVA">
+                    <input type="number" class="form-control" id="porcentajeIVA" value="21">
                 </div>
-                <div class="form-group col-md-6 mb-3 form-switch">
-                    <label for="incluirIVA" class="form-label">Incluir IVA:</label>
-                    <input type="checkbox" class="form-check-input" id="incluirIVA">
+                <div class="form-switch">
+                    <label class="form-label" for="incluirIVA">¿Incluir IVA?</label>
+                    <input type="checkbox" id="incluirIVA">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Calcular</button>
+            <button type="submit" class="btn">Calcular Precio por Hora</button>
         </form>
-        
-        <p class="mt-4 text-center" id="resultado"></p>
+        <div class="mt-4 text-left" id="resultado"></div>
     </div>
 </body>
 </html>
