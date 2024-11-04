@@ -85,62 +85,68 @@
         .form-switch input { margin-left: 10px; }
     </style>
     <script>
-    function obtenerCuotaAutonomo(año) {
-        if (año === 'primer') return 80; // Tarifa Plana
-        if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
-        return 300; // Cuota normal aproximada
-    }
-
-    function obtenerPorcentajeIRPF(año) {
-        return (año === 'primer') ? 7 : 15; // IRPF según el año
-    }
-
-    function calcularPrecioHora() {
-        const año = document.getElementById('anioAutonomo').value;
-        const cuotaAutonomo = obtenerCuotaAutonomo(año);
-        const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
-        const gastos100 = parseFloat(document.getElementById('gastos100').value);
-        const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
-        const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
-        const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
-        const incluirIVA = document.getElementById('incluirIVA').checked;
-        let porcentajeIVA = 0;
-
-        if (incluirIVA) {
-            porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
+        function obtenerCuotaAutonomo(año) {
+            if (año === 'primer') return 80; // Tarifa Plana
+            if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+            return 300; // Cuota normal aproximada
         }
-
-        // Cálculo del sueldo bruto
-        const porcentajeIRPF = obtenerPorcentajeIRPF(año);
-        const sueldoBrutoMensual = sueldoNetoMensual / (1 - (porcentajeIRPF / 100));
-
-        // Cálculo de horas trabajadas en un mes
-        const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-
-        // Cálculo de gastos mensuales
-        const gastosMensuales = gastos100 + (gastosParciales * 0.30); // 30% deducible de gastos parciales
-
-        // Cálculo del total mensual incluyendo cuotas y gastos
-        const totalMensual = sueldoBrutoMensual + cuotaAutonomo + gastosMensuales;
-
-        // Cálculo del precio por hora
-        const precioHora = incluirIVA ? totalMensual / horasTrabajadas * (1 + porcentajeIVA / 100) : totalMensual / horasTrabajadas;
-
-        const sueldoAnualNeto = sueldoNetoMensual * 12;
-        const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
-
-        // Mostrar resultados
-        document.getElementById('resultado').innerHTML = `
-            <ul class="text-left">
-                <li>Precio por hora: ${precioHora.toFixed(2)} euros</li>
-                <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
-                <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
-                <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
-                <li>Sueldo anual neto: ${sueldoAnualNeto.toFixed(2)} euros</li>
-            </ul>
-        `;
-    }
-</script>
+    
+        function obtenerPorcentajeIRPF(año) {
+            return (año === 'primer') ? 7 : 15; // IRPF según el año
+        }
+    
+        function calcularPrecioHora() {
+            const año = document.getElementById('anioAutonomo').value;
+            const cuotaAutonomo = obtenerCuotaAutonomo(año);
+            const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
+            const gastos100 = parseFloat(document.getElementById('gastos100').value);
+            const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
+            const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
+            const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
+            const incluirIVA = document.getElementById('incluirIVA').checked;
+            let porcentajeIVA = 0;
+    
+            if (incluirIVA) {
+                porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
+            }
+    
+            // Cálculo de horas trabajadas en un mes
+            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
+    
+            // Cálculo de gastos mensuales
+            const gastosMensuales = gastos100 + (gastosParciales * 0.30); // 30% deducible de gastos parciales
+    
+            // Estimación inicial del sueldo bruto
+            let sueldoBrutoMensual = sueldoNetoMensual;
+    
+            // Calculo del porcentaje de IRPF
+            const porcentajeIRPF = obtenerPorcentajeIRPF(año);
+    
+            // Ajuste del sueldo bruto para cubrir todos los gastos
+            let totalMensual;
+            do {
+                totalMensual = sueldoBrutoMensual + cuotaAutonomo + gastosMensuales;
+                sueldoBrutoMensual = totalMensual / (1 - (porcentajeIRPF / 100));
+            } while (Math.abs(totalMensual - (sueldoBrutoMensual + cuotaAutonomo + gastosMensuales)) > 0.01);
+    
+            // Cálculo del precio por hora
+            const precioHora = incluirIVA ? totalMensual / horasTrabajadas * (1 + porcentajeIVA / 100) : totalMensual / horasTrabajadas;
+    
+            const sueldoAnualNeto = sueldoNetoMensual * 12;
+            const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
+    
+            // Mostrar resultados
+            document.getElementById('resultado').innerHTML = `
+                <ul class="text-left">
+                    <li>Precio por hora: ${precioHora.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
+                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
+                    <li>Sueldo anual neto: ${sueldoAnualNeto.toFixed(2)} euros</li>
+                </ul>
+            `;
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
