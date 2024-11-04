@@ -87,48 +87,76 @@
     <script>
         async function obtenerTipoCambio() {
             try {
-                const response = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/EUR'); // URL de la API
                 const data = await response.json();
-                return data.tipoCambio; // Ajusta esto según la estructura de tu API
+                return data.rates.USD; // Retorna el valor del dólar
             } catch (error) {
                 console.error('Error al obtener el tipo de cambio:', error);
-                return 1; // Valor por defecto en caso de error
+                return 1; // Retorna 1 en caso de error para evitar problemas en el cálculo
             }
         }
+        
+        function obtenerCuotaAutonomo(año, baseCotizacion) {
+            if (año === 'primer') return 80; // Tarifa Plana
+            if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+        
+            // A partir del tercer año, usar la base de cotización
+            if (baseCotizacion <= 1000) return 300; // Cuota para base baja
+            if (baseCotizacion <= 1500) return 350; // Cuota para base media
+            if (baseCotizacion <= 2000) return 400; // Cuota para base alta
+            return 450; // Cuota para base muy alta
+        }
 
-        async function calcularSueldoNeto() {
+
+        function obtenerPorcentajeIRPF(año, baseCotizacion) {
+            if (año === 'primer') return 7;
+            if (año === 'segundo') return 15;
+        
+            // A partir del tercer año, ajustar el IRPF según la base de cotización
+            if (baseCotizacion <= 1000) return 15; // IRPF para base baja
+            if (baseCotizacion <= 1500) return 20; // IRPF para base media
+            if (baseCotizacion <= 2000) return 25; // IRPF para base alta
+            return 30; // IRPF para base muy alta
+        }
+
+
+        function calcularSueldoNeto() {
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
+            const año = document.getElementById('anioAutonomo').value;
+            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
             const precioHora = parseFloat(document.getElementById('precioHora').value);
             const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
-            const anioAutonomo = document.getElementById('anioAutonomo').value;
             const incluirIVA = document.getElementById('incluirIVA').checked;
-            const porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value) || 21;
-
-            // Validaciones
-            if (!baseCotizacion || !precioHora || !gastosParciales || !horasPorDia || !diasPorSemana) {
-                document.getElementById('resultado').innerText = 'Por favor, completa todos los campos requeridos.';
-                return;
-            }
-
-            // Cálculos
-            let ingresos = (precioHora * horasPorDia * diasPorSemana) + baseCotizacion;
-            let gastos = gastosParciales;
-
-            // Obtener tipo de cambio
-            const tipoCambio = await obtenerTipoCambio();
-            ingresos *= tipoCambio;
-
+            let porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
+            
             if (incluirIVA) {
-                const iva = (ingresos * (porcentajeIVA / 100));
-                ingresos += iva;
+                porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
             }
 
-            let sueldoNeto = ingresos - gastos;
+            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
+            const gastosDeducidos = (gastosParciales * (1 - 0.30));
+            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
+            const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
+            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
+            const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
 
-            // Mostrar resultado
-            document.getElementById('resultado').innerText = `El sueldo neto es: ${sueldoNeto.toFixed(2)}`;
+            // Obtener tipo de cambio USD
+            const tipoCambioUSD = await obtenerTipoCambio();
+            const sueldoBrutoMensualUSD = sueldoBrutoMensual / tipoCambioUSD; // Convertir a USD
+
+            document.getElementById('resultado').innerHTML = 
+                <ul class="text-left">
+                    <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto USD: ${sueldoBrutoMensualUSD.toFixed(2)} USD</li>
+                    <li>Gastos mensuales: ${gastosDeducidos.toFixed(2)} euros</li>
+                    <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
+                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
+                    <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
+                </ul>
+            ;
         }
     </script>
 </head>
