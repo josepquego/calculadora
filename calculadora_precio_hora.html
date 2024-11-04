@@ -85,6 +85,17 @@
         .form-switch input { margin-left: 10px; }
     </style>
     <script>
+        async function obtenerTipoCambio() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/EUR'); // URL de la API
+                const data = await response.json();
+                return data.rates.USD; // Retorna el valor del dólar
+            } catch (error) {
+                console.error('Error al obtener el tipo de cambio:', error);
+                return 1; // Retorna 1 en caso de error para evitar problemas en el cálculo
+            }
+        }
+        
         function obtenerCuotaAutonomo(año, baseCotizacion) {
             if (año === 'primer') return 80; // Tarifa Plana
             if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
@@ -125,11 +136,16 @@
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
             const precioHora = (sueldoBrutoMensual - irpfMensual) / horasTrabajadas;
 
+            // Obtener tipo de cambio USD
+            const tipoCambioUSD = await obtenerTipoCambio();
+            const sueldoBrutoMensualUSD = sueldoBrutoMensual / tipoCambioUSD; // Convertir a USD
+    
             document.getElementById('resultado').innerHTML = `
                 <ul class="text-left">
                     <li>Precio por Hora: ${precioHora.toFixed(2)} euros</li>
                     <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
                     <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto USD: ${sueldoBrutoMensualUSD.toFixed(2)} USD</li>
                     <li>Gastos mensuales: ${gastosDeducidos.toFixed(2)} euros</li>
                     <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
                     <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
