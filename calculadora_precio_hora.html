@@ -110,6 +110,7 @@
 
 
         function calcularPrecioHora() {
+            const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
             const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
             const año = document.getElementById('anioAutonomo').value;
             const cuotaAutonomo = obtenerCuotaAutonomo(año);
