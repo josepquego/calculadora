@@ -113,14 +113,14 @@
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
             const sueldoNetoMensual = parseFloat(document.getElementById('sueldoNetoMensual').value);
             const año = document.getElementById('anioAutonomo').value;
-            const cuotaAutonomo = obtenerCuotaAutonomo(año);
+            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
             const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
 
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
             const gastosDeducidos = (gastosParciales * (1 - 0.30));
-            const porcentajeIRPF = obtenerPorcentajeIRPF(año);
+            const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
             const sueldoBrutoMensual = sueldoNetoMensual + cuotaAutonomo + gastosDeducidos; // Ajustar el sueldo bruto
             const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
             const precioHora = (sueldoBrutoMensual - irpfMensual) / horasTrabajadas;
