@@ -85,15 +85,29 @@
         .form-switch input { margin-left: 10px; }
     </style>
     <script>
-        function obtenerCuotaAutonomo(año) {
+        function obtenerCuotaAutonomo(año, baseCotizacion) {
             if (año === 'primer') return 80; // Tarifa Plana
             if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
-            return 300; // Cuota normal aproximada
+        
+            // A partir del tercer año, usar la base de cotización
+            if (baseCotizacion <= 1000) return 300; // Cuota para base baja
+            if (baseCotizacion <= 1500) return 350; // Cuota para base media
+            if (baseCotizacion <= 2000) return 400; // Cuota para base alta
+            return 450; // Cuota para base muy alta
         }
 
-        function obtenerPorcentajeIRPF(año) {
-            return (año === 'primer') ? 7 : 15; // IRPF según el año
+
+        function obtenerPorcentajeIRPF(año, baseCotizacion) {
+            if (año === 'primer') return 7;
+            if (año === 'segundo') return 15;
+        
+            // A partir del tercer año, ajustar el IRPF según la base de cotización
+            if (baseCotizacion <= 1000) return 15; // IRPF para base baja
+            if (baseCotizacion <= 1500) return 20; // IRPF para base media
+            if (baseCotizacion <= 2000) return 25; // IRPF para base alta
+            return 30; // IRPF para base muy alta
         }
+
 
         function calcularSueldoNeto() {
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
