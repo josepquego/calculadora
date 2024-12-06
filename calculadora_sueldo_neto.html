@@ -86,8 +86,8 @@
     </style>
     <script>
         function obtenerCuotaAutonomo(año, baseCotizacion) {
-            if (año === 'primer') return 80; // Tarifa Plana
-            if (año === 'segundo') return 160; // Segunda fase de Tarifa Plana
+            if (año === 'primer') return 86; // Tarifa Plana
+            if (año === 'segundo') return 86; // Segunda fase de Tarifa Plana
         
             // A partir del tercer año, usar la base de cotización
             if (baseCotizacion <= 1000) return 300; // Cuota para base baja
@@ -97,11 +97,11 @@
         }
     
         function obtenerPorcentajeIRPF(año, baseCotizacion) {
-            if (año === 'primer') return 7;
-            if (año === 'segundo') return 15;
+            if (año === 'primer') return 20;
+            if (año === 'segundo') return 20;
         
             // A partir del tercer año, ajustar el IRPF según la base de cotización
-            if (baseCotizacion <= 1000) return 15; // IRPF para base baja
+            if (baseCotizacion <= 1000) return 20; // IRPF para base baja
             if (baseCotizacion <= 1500) return 20; // IRPF para base media
             if (baseCotizacion <= 2000) return 25; // IRPF para base alta
             return 30; // IRPF para base muy alta
