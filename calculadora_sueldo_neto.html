@@ -85,55 +85,64 @@
         .form-switch input { margin-left: 10px; }
     </style>
     <script>
-        function obtenerCuotaAutonomo(año, baseCotizacion) {
-            if (año === 'primer') return 86; // Tarifa Plana
-            if (año === 'segundo') return 86; // Segunda fase de Tarifa Plana
-        
-            // A partir del tercer año, usar la base de cotización
-            if (baseCotizacion <= 1000) return 300; // Cuota para base baja
-            if (baseCotizacion <= 1500) return 350; // Cuota para base media
-            if (baseCotizacion <= 2000) return 400; // Cuota para base alta
-            return 450; // Cuota para base muy alta
+        function obtenerCuotaAutonomo(año) {
+            if (año === 'primer' || año === 'segundo') return 87.6; // Tarifa Plana para primer y segundo año
+            return 300; // Cuota para el resto de años
         }
-    
-        function obtenerPorcentajeIRPF(año, baseCotizacion) {
-            if (año === 'primer') return 20;
-            if (año === 'segundo') return 20;
-        
-            // A partir del tercer año, ajustar el IRPF según la base de cotización
-            if (baseCotizacion <= 1000) return 20; // IRPF para base baja
-            if (baseCotizacion <= 1500) return 20; // IRPF para base media
-            if (baseCotizacion <= 2000) return 25; // IRPF para base alta
-            return 30; // IRPF para base muy alta
+
+        function obtenerPorcentajeIRPF(baseImponible) {
+            if (baseImponible <= 12450) return 19;
+            if (baseImponible <= 20200) return 24;
+            if (baseImponible <= 35200) return 30;
+            if (baseImponible <= 60000) return 37;
+            return 45;
         }
 
         function calcularSueldoNeto() {
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
             const año = document.getElementById('anioAutonomo').value;
-            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
+            const cuotaAutonomo = obtenerCuotaAutonomo(año);
             const precioHora = parseFloat(document.getElementById('precioHora').value);
-            const gastosParciales = parseFloat(document.getElementById('gastosParciales').value);
+            const gastosParciales30 = parseFloat(document.getElementById('gastosParciales30').value); // Gastos deducibles al 30%
+            const gastosParciales100 = parseFloat(document.getElementById('gastosParciales100').value); // Gastos deducibles al 100%
+            const ivaSoportado = parseFloat(document.getElementById('ivaSoportado').value); // IVA soportado en gastos
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
-            const incluirIVA = document.getElementById('incluirIVA').checked;
-            let porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
-            
-            if (incluirIVA) {
-                porcentajeIVA = parseFloat(document.getElementById('porcentajeIVA').value);
-            }
+            const incluirIVAFactura = document.getElementById('incluirIVAFactura').checked;
+            const porcentajeIVAFactura = parseFloat(document.getElementById('porcentajeIVAFactura').value);
 
+            // Cálculo del IVA repercutido (si la factura incluye IVA)
             const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
-            const gastosDeducidos = (gastosParciales * (1 - 0.30));
-            const sueldoBrutoMensual = (precioHora * horasTrabajadas) + gastosDeducidos; // Incluyendo gastos parciales con deducción
-            const porcentajeIRPF = obtenerPorcentajeIRPF(año, baseCotizacion);
-            const sueldoNetoMensual = (sueldoBrutoMensual * (1 - porcentajeIRPF / 100)) - cuotaAutonomo - gastosDeducidos;
-            const irpfMensual = sueldoBrutoMensual * (porcentajeIRPF / 100);
+            const sueldoBrutoSinIVA = precioHora * horasTrabajadas;
+            const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * (porcentajeIVAFactura / 100) : 0;
+            const sueldoBrutoConIVA = sueldoBrutoSinIVA + ivaRepercutido;
+
+            // Gastos deducibles
+            const gastosDeducidos30 = gastosParciales30 * 0.30; // 30% de deducción de gastos
+            const gastosDeducidos100 = gastosParciales100; // 100% de deducción de gastos
+            const totalGastosDeducidos = gastosDeducidos30 + gastosDeducidos100;
+
+            // Base imponible para IRPF
+            const baseImponible = sueldoBrutoSinIVA - totalGastosDeducidos - cuotaAutonomo;
+            const porcentajeIRPF = obtenerPorcentajeIRPF(baseImponible);
+            const irpfMensual = baseImponible * (porcentajeIRPF / 100);
+
+            // IVA a pagar (IVA repercutido - IVA soportado)
+            const ivaAPagar = ivaRepercutido - ivaSoportado;
+
+            // Sueldo neto mensual
+            const sueldoNetoMensual = sueldoBrutoSinIVA - cuotaAutonomo - irpfMensual - ivaAPagar;
 
             document.getElementById('resultado').innerHTML = `
                 <ul class="text-left">
                     <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
-                    <li>Sueldo mensual bruto: ${sueldoBrutoMensual.toFixed(2)} euros</li>
-                    <li>Gastos mensuales: ${gastosDeducidos.toFixed(2)} euros</li>
+                    <li>Sueldo mensual bruto (sin IVA): ${sueldoBrutoSinIVA.toFixed(2)} euros</li>
+                    <li>IVA repercutido: ${ivaRepercutido.toFixed(2)} euros</li>
+                    <li>IVA soportado: ${ivaSoportado.toFixed(2)} euros</li>
+                    <li>IVA a pagar: ${ivaAPagar.toFixed(2)} euros</li>
+                    <li>Gastos mensuales deducibles (30%): ${gastosDeducidos30.toFixed(2)} euros</li>
+                    <li>Gastos mensuales deducibles (100%): ${gastosDeducidos100.toFixed(2)} euros</li>
+                    <li>Total gastos deducibles: ${totalGastosDeducidos.toFixed(2)} euros</li>
                     <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
                     <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
                     <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
@@ -166,8 +175,18 @@
                     <input type="number" class="form-control" id="precioHora" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
-                    <label for="gastosParciales" class="form-label">Gastos Deducibles Parciales:</label>
-                    <input type="number" class="form-control" id="gastosParciales" required>
+                    <label for="gastosParciales30" class="form-label">Gastos Deducibles al 30%:</label>
+                    <input type="number" class="form-control" id="gastosParciales30" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="gastosParciales100" class="form-label">Gastos Deducibles al 100%:</label>
+                    <input type="number" class="form-control" id="gastosParciales100" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="ivaSoportado" class="form-label">IVA Soportado en Gastos:</label>
+                    <input type="number" class="form-control" id="ivaSoportado" required>
                 </div>
             </div>
             <div class="row">
@@ -182,12 +201,12 @@
             </div>
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="porcentajeIVA" class="form-label">Porcentaje IVA (%):</label>
-                    <input type="number" class="form-control" id="porcentajeIVA" value="0">
+                    <label for="porcentajeIVAFactura" class="form-label">Porcentaje IVA Factura (%):</label>
+                    <input type="number" class="form-control" id="porcentajeIVAFactura" value="21">
                 </div>
                 <div class="form-switch">
-                    <label class="form-label" for="incluirIVA">¿Incluir IVA?</label>
-                    <input type="checkbox" id="incluirIVA">
+                    <label class="form-label" for="incluirIVAFactura">¿Incluir IVA en Factura?</label>
+                    <input type="checkbox" id="incluirIVAFactura" checked>
                 </div>
             </div>
             <button type="submit" class="btn">Calcular Sueldo Neto</button>
