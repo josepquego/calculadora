@@ -95,8 +95,16 @@
             const ahora = new Date();
             const año = ahora.getFullYear();
             const mes = ahora.getMonth();
+            const primerDia = new Date(año, mes, 1);
             const ultimoDia = new Date(año, mes + 1, 0);
-            return ultimoDia.getDate();
+            let diasLaborables = 0;
+
+            for (let dia = primerDia; dia <= ultimoDia; dia.setDate(dia.getDate() + 1)) {
+                if (dia.getDay() !== 0 && dia.getDay() !== 6) { // Excluye sábados (6) y domingos (0)
+                    diasLaborables++;
+                }
+            }
+            return diasLaborables;
         }
 
         function actualizarCampos() {
@@ -174,21 +182,23 @@
     <div class="container mt-5">
         <h1 class="text-center">Calculadora de Sueldo Neto</h1>
         <form onsubmit="event.preventDefault(); calcularSueldoNeto();" class="mt-4">
-            <div class="row">
-                <div class="form-group col-md-6 mb-3">
-                    <label for="anioAutonomo">Años como Autónomo:</label>
-                    <select class="form-control" id="anioAutonomo" required>
-                        <option value="primer">Primer Año</option>
-                        <option value="segundo">Segundo Año</option>
-                        <option value="resto">Resto</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-6 mb-3 hidden" id="baseCotizacionGroup">
-                    <label for="baseCotizacion">Base de Cotización:</label>
-                    <input type="number" class="form-control" id="baseCotizacion" value="1080">
-                </div>
+            <!-- Select de años como autónomo (ocupa toda la fila) -->
+            <div class="form-group mb-3">
+                <label for="anioAutonomo">Años como Autónomo:</label>
+                <select class="form-control" id="anioAutonomo" required>
+                    <option value="primer">Primer Año</option>
+                    <option value="segundo">Segundo Año</option>
+                    <option value="resto">Resto</option>
+                </select>
             </div>
-            
+
+            <!-- Base de cotización (oculto para primer y segundo año) -->
+            <div class="form-group mb-3 hidden" id="baseCotizacionGroup">
+                <label for="baseCotizacion">Base de Cotización:</label>
+                <input type="number" class="form-control" id="baseCotizacion" value="1080">
+            </div>
+
+            <!-- Precio por hora y días trabajados este mes -->
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="precioHora">Precio por Hora (€):</label>
@@ -200,6 +210,7 @@
                 </div>
             </div>
 
+            <!-- Horas diarias y días por semana -->
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="horasPorDia">Horas diarias:</label>
@@ -211,6 +222,7 @@
                 </div>
             </div>
 
+            <!-- Gastos deducibles -->
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="gastosParciales30">Gastos deducibles 30%:</label>
@@ -222,6 +234,7 @@
                 </div>
             </div>
 
+            <!-- IVA -->
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="porcentajeIVAFactura">% IVA Factura:</label>
