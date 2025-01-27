@@ -83,11 +83,76 @@
         }
         .form-switch { display: flex; align-items: center; margin-bottom: 1rem; }
         .form-switch input { margin-left: 10px; }
+        .hidden { display: none; }
     </style>
     <script>
-        function obtenerCuotaAutonomo(año) {
-            if (año === 'primer' || año === 'segundo') return 87.6; // Tarifa Plana para primer y segundo año
-            return 300; // Cuota para el resto de años
+        function obtenerCuotaAutonomo(año, baseCotizacion) {
+            if (año === 'primer' || año === 'segundo') return 87.60;
+            return baseCotizacion * 0.303; // 30.3% para años posteriores
+        }
+
+        function obtenerDiasLaborablesMes() {
+            const ahora = new Date();
+            const año = ahora.getFullYear();
+            const mes = ahora.getMonth();
+            const ultimoDia = new Date(año, mes + 1, 0);
+            return ultimoDia.getDate();
+        }
+
+        function actualizarCampos() {
+            const año = document.getElementById('anioAutonomo').value;
+            document.getElementById('baseCotizacionGroup').classList.toggle('hidden', año !== 'resto');
+            
+            // Calcular días laborables automáticamente
+            if (!document.getElementById('diasTrabajoMes').value) {
+                document.getElementById('diasTrabajoMes').value = obtenerDiasLaborablesMes();
+            }
+        }
+
+        function calcularSueldoNeto() {
+            const año = document.getElementById('anioAutonomo').value;
+            const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value) || 0;
+            const cuotaAutonomo = obtenerCuotaAutonomo(año, baseCotizacion);
+            const precioHora = parseFloat(document.getElementById('precioHora').value);
+            const gastosParciales30 = parseFloat(document.getElementById('gastosParciales30').value);
+            const gastosParciales100 = parseFloat(document.getElementById('gastosParciales100').value);
+            const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
+            const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
+            const diasTrabajoMes = parseFloat(document.getElementById('diasTrabajoMes').value);
+            const incluirIVAFactura = document.getElementById('incluirIVAFactura').checked;
+            const porcentajeIVAFactura = parseFloat(document.getElementById('porcentajeIVAFactura').value);
+
+            // Cálculos
+            const horasTrabajadas = horasPorDia * (diasTrabajoMes / 5 * diasPorSemana); // Asume 5 días laborables por semana
+            const sueldoBrutoSinIVA = precioHora * horasTrabajadas;
+            const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * (porcentajeIVAFactura / 100) : 0;
+            const ivaSoportado = (gastosParciales30 + gastosParciales100) * 0.21;
+            
+            // Gastos deducibles
+            const gastosDeducidos30 = gastosParciales30 * 0.30;
+            const gastosDeducidos100 = gastosParciales100;
+            const totalGastosDeducidos = gastosDeducidos30 + gastosDeducidos100;
+
+            // Cálculo IRPF
+            const baseImponible = sueldoBrutoSinIVA - totalGastosDeducidos - cuotaAutonomo;
+            const porcentajeIRPF = obtenerPorcentajeIRPF(baseImponible);
+            const irpfMensual = baseImponible * (porcentajeIRPF / 100);
+
+            // Resultados finales
+            const ivaAPagar = ivaRepercutido - ivaSoportado;
+            const sueldoNetoMensual = sueldoBrutoSinIVA - cuotaAutonomo - irpfMensual - ivaAPagar;
+
+            document.getElementById('resultado').innerHTML = `
+                <ul class="text-left">
+                    <li>Horas totales del mes: ${horasTrabajadas.toFixed(2)}</li>
+                    <li>Días trabajados: ${diasTrabajoMes}</li>
+                    <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)}€</li>
+                    <li>Cuota Autónomo: ${cuotaAutonomo.toFixed(2)}€</li>
+                    <li>Base Imponible IRPF: ${baseImponible.toFixed(2)}€</li>
+                    <li>Retención IRPF (${porcentajeIRPF}%): ${irpfMensual.toFixed(2)}€</li>
+                    <li>IVA a pagar: ${ivaAPagar.toFixed(2)}€</li>
+                </ul>
+            `;
         }
 
         function obtenerPorcentajeIRPF(baseImponible) {
@@ -98,74 +163,11 @@
             return 45;
         }
 
-        function obtenerSemanasEnMes() {
-            const ahora = new Date();
-            const año = ahora.getFullYear();
-            const mes = ahora.getMonth();
-            const primerDia = new Date(año, mes, 1);
-            const ultimoDia = new Date(año, mes + 1, 0);
-            const diasEnMes = ultimoDia.getDate();
-            const semanas = Math.ceil((diasEnMes + primerDia.getDay()) / 7);
-            return semanas;
-        }
-
-        function calcularSueldoNeto() {
-            const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
-            const año = document.getElementById('anioAutonomo').value;
-            const cuotaAutonomo = obtenerCuotaAutonomo(año);
-            const precioHora = parseFloat(document.getElementById('precioHora').value);
-            const gastosParciales30 = parseFloat(document.getElementById('gastosParciales30').value); // Gastos deducibles al 30%
-            const gastosParciales100 = parseFloat(document.getElementById('gastosParciales100').value); // Gastos deducibles al 100%
-            const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
-            const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
-            const incluirIVAFactura = document.getElementById('incluirIVAFactura').checked;
-            const porcentajeIVAFactura = parseFloat(document.getElementById('porcentajeIVAFactura').value);
-
-            // Calcular IVA soportado automáticamente al 21% sobre los gastos
-            const ivaSoportado = (gastosParciales30 + gastosParciales100) * 0.21;
-
-            // Calcular horas totales del mes
-            const semanasEnMes = obtenerSemanasEnMes();
-            const horasTrabajadas = horasPorDia * diasPorSemana * semanasEnMes;
-
-            // Cálculo del IVA repercutido (si la factura incluye IVA)
-            const sueldoBrutoSinIVA = precioHora * horasTrabajadas;
-            const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * (porcentajeIVAFactura / 100) : 0;
-            const sueldoBrutoConIVA = sueldoBrutoSinIVA + ivaRepercutido;
-
-            // Gastos deducibles
-            const gastosDeducidos30 = gastosParciales30 * 0.30; // 30% de deducción de gastos
-            const gastosDeducidos100 = gastosParciales100; // 100% de deducción de gastos
-            const totalGastosDeducidos = gastosDeducidos30 + gastosDeducidos100;
-
-            // Base imponible para IRPF
-            const baseImponible = sueldoBrutoSinIVA - totalGastosDeducidos - cuotaAutonomo;
-            const porcentajeIRPF = obtenerPorcentajeIRPF(baseImponible);
-            const irpfMensual = baseImponible * (porcentajeIRPF / 100);
-
-            // IVA a pagar (IVA repercutido - IVA soportado)
-            const ivaAPagar = ivaRepercutido - ivaSoportado;
-
-            // Sueldo neto mensual
-            const sueldoNetoMensual = sueldoBrutoSinIVA - cuotaAutonomo - irpfMensual - ivaAPagar;
-
-            document.getElementById('resultado').innerHTML = `
-                <ul class="text-left">
-                    <li>Horas totales del mes: ${horasTrabajadas.toFixed(2)} horas</li>
-                    <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
-                    <li>Sueldo mensual bruto (sin IVA): ${sueldoBrutoSinIVA.toFixed(2)} euros</li>
-                    <li>IVA repercutido: ${ivaRepercutido.toFixed(2)} euros</li>
-                    <li>IVA soportado: ${ivaSoportado.toFixed(2)} euros</li>
-                    <li>IVA a pagar: ${ivaAPagar.toFixed(2)} euros</li>
-                    <li>Gastos mensuales deducibles (30%): ${gastosDeducidos30.toFixed(2)} euros</li>
-                    <li>Gastos mensuales deducibles (100%): ${gastosDeducidos100.toFixed(2)} euros</li>
-                    <li>Total gastos deducibles: ${totalGastosDeducidos.toFixed(2)} euros</li>
-                    <li>Porcentaje IRPF: ${porcentajeIRPF}%</li>
-                    <li>IRPF mensual: ${irpfMensual.toFixed(2)} euros</li>
-                    <li>Cuota de Autónomo: ${cuotaAutonomo.toFixed(2)} euros</li>
-                </ul>
-            `;
-        }
+        // Inicializar campos al cargar
+        window.onload = function() {
+            actualizarCampos();
+            document.getElementById('anioAutonomo').addEventListener('change', actualizarCampos);
+        };
     </script>
 </head>
 <body>
@@ -174,53 +176,66 @@
         <form onsubmit="event.preventDefault(); calcularSueldoNeto();" class="mt-4">
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="baseCotizacion" class="form-label">Base de Cotización:</label>
-                    <input type="number" class="form-control" id="baseCotizacion" value="1080" required>
-                </div>
-                <div class="form-group col-md-6 mb-3">
-                    <label for="anioAutonomo" class="form-label">Años como Autónomo:</label>
+                    <label for="anioAutonomo">Años como Autónomo:</label>
                     <select class="form-control" id="anioAutonomo" required>
                         <option value="primer">Primer Año</option>
                         <option value="segundo">Segundo Año</option>
                         <option value="resto">Resto</option>
                     </select>
                 </div>
+                <div class="form-group col-md-6 mb-3 hidden" id="baseCotizacionGroup">
+                    <label for="baseCotizacion">Base de Cotización:</label>
+                    <input type="number" class="form-control" id="baseCotizacion" value="1080">
+                </div>
             </div>
+            
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="precioHora" class="form-label">Precio por Hora:</label>
+                    <label for="precioHora">Precio por Hora (€):</label>
                     <input type="number" class="form-control" id="precioHora" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
-                    <label for="gastosParciales30" class="form-label">Gastos Deducibles al 30%:</label>
-                    <input type="number" class="form-control" id="gastosParciales30" required>
+                    <label for="diasTrabajoMes">Días trabajados este mes:</label>
+                    <input type="number" class="form-control" id="diasTrabajoMes" required>
                 </div>
             </div>
+
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="gastosParciales100" class="form-label">Gastos Deducibles al 100%:</label>
-                    <input type="number" class="form-control" id="gastosParciales100" required>
-                </div>
-                <div class="form-group col-md-6 mb-3">
-                    <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
+                    <label for="horasPorDia">Horas diarias:</label>
                     <input type="number" class="form-control" id="horasPorDia" required>
                 </div>
-            </div>
-            <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
+                    <label for="diasPorSemana">Días por semana:</label>
                     <input type="number" class="form-control" id="diasPorSemana" required>
                 </div>
+            </div>
+
+            <div class="row">
                 <div class="form-group col-md-6 mb-3">
-                    <label for="porcentajeIVAFactura" class="form-label">Porcentaje IVA Factura (%):</label>
-                    <input type="number" class="form-control" id="porcentajeIVAFactura" value="21">
+                    <label for="gastosParciales30">Gastos deducibles 30%:</label>
+                    <input type="number" class="form-control" id="gastosParciales30" required>
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="gastosParciales100">Gastos deducibles 100%:</label>
+                    <input type="number" class="form-control" id="gastosParciales100" required>
                 </div>
             </div>
-            <div class="form-switch">
-                <label class="form-label" for="incluirIVAFactura">¿Incluir IVA en Factura?</label>
-                <input type="checkbox" id="incluirIVAFactura" checked>
+
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="porcentajeIVAFactura">% IVA Factura:</label>
+                    <input type="number" class="form-control" id="porcentajeIVAFactura" value="21">
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <div class="form-switch">
+                        <label>Incluir IVA en factura:</label>
+                        <input type="checkbox" id="incluirIVAFactura" checked>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn">Calcular Sueldo Neto</button>
+
+            <button type="submit" class="btn">Calcular</button>
         </form>
         <div class="mt-4 text-left" id="resultado"></div>
     </div>
