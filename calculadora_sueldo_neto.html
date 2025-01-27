@@ -98,6 +98,17 @@
             return 45;
         }
 
+        function obtenerSemanasEnMes() {
+            const ahora = new Date();
+            const año = ahora.getFullYear();
+            const mes = ahora.getMonth();
+            const primerDia = new Date(año, mes, 1);
+            const ultimoDia = new Date(año, mes + 1, 0);
+            const diasEnMes = ultimoDia.getDate();
+            const semanas = Math.ceil((diasEnMes + primerDia.getDay()) / 7);
+            return semanas;
+        }
+
         function calcularSueldoNeto() {
             const baseCotizacion = parseFloat(document.getElementById('baseCotizacion').value);
             const año = document.getElementById('anioAutonomo').value;
@@ -105,14 +116,19 @@
             const precioHora = parseFloat(document.getElementById('precioHora').value);
             const gastosParciales30 = parseFloat(document.getElementById('gastosParciales30').value); // Gastos deducibles al 30%
             const gastosParciales100 = parseFloat(document.getElementById('gastosParciales100').value); // Gastos deducibles al 100%
-            const ivaSoportado = parseFloat(document.getElementById('ivaSoportado').value); // IVA soportado en gastos
             const horasPorDia = parseFloat(document.getElementById('horasPorDia').value);
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
             const incluirIVAFactura = document.getElementById('incluirIVAFactura').checked;
             const porcentajeIVAFactura = parseFloat(document.getElementById('porcentajeIVAFactura').value);
 
+            // Calcular IVA soportado automáticamente al 21% sobre los gastos
+            const ivaSoportado = (gastosParciales30 + gastosParciales100) * 0.21;
+
+            // Calcular horas totales del mes
+            const semanasEnMes = obtenerSemanasEnMes();
+            const horasTrabajadas = horasPorDia * diasPorSemana * semanasEnMes;
+
             // Cálculo del IVA repercutido (si la factura incluye IVA)
-            const horasTrabajadas = horasPorDia * diasPorSemana * 4; // Asumiendo 4 semanas en un mes
             const sueldoBrutoSinIVA = precioHora * horasTrabajadas;
             const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * (porcentajeIVAFactura / 100) : 0;
             const sueldoBrutoConIVA = sueldoBrutoSinIVA + ivaRepercutido;
@@ -135,6 +151,7 @@
 
             document.getElementById('resultado').innerHTML = `
                 <ul class="text-left">
+                    <li>Horas totales del mes: ${horasTrabajadas.toFixed(2)} horas</li>
                     <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)} euros</li>
                     <li>Sueldo mensual bruto (sin IVA): ${sueldoBrutoSinIVA.toFixed(2)} euros</li>
                     <li>IVA repercutido: ${ivaRepercutido.toFixed(2)} euros</li>
@@ -185,29 +202,23 @@
                     <input type="number" class="form-control" id="gastosParciales100" required>
                 </div>
                 <div class="form-group col-md-6 mb-3">
-                    <label for="ivaSoportado" class="form-label">IVA Soportado en Gastos:</label>
-                    <input type="number" class="form-control" id="ivaSoportado" required>
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group col-md-6 mb-3">
                     <label for="horasPorDia" class="form-label">Horas Trabajadas al Día:</label>
                     <input type="number" class="form-control" id="horasPorDia" required>
                 </div>
+            </div>
+            <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="diasPorSemana" class="form-label">Días de Trabajo Semanal:</label>
                     <input type="number" class="form-control" id="diasPorSemana" required>
                 </div>
-            </div>
-            <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="porcentajeIVAFactura" class="form-label">Porcentaje IVA Factura (%):</label>
                     <input type="number" class="form-control" id="porcentajeIVAFactura" value="21">
                 </div>
-                <div class="form-switch">
-                    <label class="form-label" for="incluirIVAFactura">¿Incluir IVA en Factura?</label>
-                    <input type="checkbox" id="incluirIVAFactura" checked>
-                </div>
+            </div>
+            <div class="form-switch">
+                <label class="form-label" for="incluirIVAFactura">¿Incluir IVA en Factura?</label>
+                <input type="checkbox" id="incluirIVAFactura" checked>
             </div>
             <button type="submit" class="btn">Calcular Sueldo Neto</button>
         </form>
