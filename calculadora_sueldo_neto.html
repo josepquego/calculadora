@@ -128,12 +128,11 @@
             const diasPorSemana = parseFloat(document.getElementById('diasPorSemana').value);
             const diasTrabajoMes = parseFloat(document.getElementById('diasTrabajoMes').value);
             const incluirIVAFactura = document.getElementById('incluirIVAFactura').checked;
-            const porcentajeIVAFactura = parseFloat(document.getElementById('porcentajeIVAFactura').value);
 
             // Cálculos
             const horasTrabajadas = horasPorDia * (diasTrabajoMes / 5 * diasPorSemana); // Asume 5 días laborables por semana
             const sueldoBrutoSinIVA = precioHora * horasTrabajadas;
-            const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * (porcentajeIVAFactura / 100) : 0;
+            const ivaRepercutido = incluirIVAFactura ? sueldoBrutoSinIVA * 0.21 : 0; // IVA automático al 21%
             const ivaSoportado = (gastosParciales30 + gastosParciales100) * 0.21;
             
             // Gastos deducibles
@@ -154,6 +153,7 @@
                 <ul class="text-left">
                     <li>Horas totales del mes: ${horasTrabajadas.toFixed(2)}</li>
                     <li>Días trabajados: ${diasTrabajoMes}</li>
+                    <li>Sueldo Bruto (Facturación): ${sueldoBrutoSinIVA.toFixed(2)}€</li>
                     <li>Sueldo Neto Mensual: ${sueldoNetoMensual.toFixed(2)}€</li>
                     <li>Cuota Autónomo: ${cuotaAutonomo.toFixed(2)}€</li>
                     <li>Base Imponible IRPF: ${baseImponible.toFixed(2)}€</li>
@@ -235,16 +235,10 @@
             </div>
 
             <!-- IVA -->
-            <div class="row">
-                <div class="form-group col-md-6 mb-3">
-                    <label for="porcentajeIVAFactura">% IVA Factura:</label>
-                    <input type="number" class="form-control" id="porcentajeIVAFactura" value="21">
-                </div>
-                <div class="form-group col-md-6 mb-3">
-                    <div class="form-switch">
-                        <label>Incluir IVA en factura:</label>
-                        <input type="checkbox" id="incluirIVAFactura" checked>
-                    </div>
+            <div class="form-group mb-3">
+                <div class="form-switch">
+                    <label>Incluir IVA en factura:</label>
+                    <input type="checkbox" id="incluirIVAFactura">
                 </div>
             </div>
 
