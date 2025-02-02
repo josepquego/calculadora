@@ -142,7 +142,7 @@
 
             // Cálculo IRPF
             const baseImponible = sueldoBrutoSinIVA - totalGastosDeducidos - cuotaAutonomo;
-            const porcentajeIRPF = obtenerPorcentajeIRPF(baseImponible);
+            const porcentajeIRPF = 20;
             const irpfMensual = baseImponible * (porcentajeIRPF / 100);
 
             // Resultados finales
@@ -160,14 +160,6 @@
                     <li>IVA a pagar: ${ivaAPagar.toFixed(2)}€</li>
                 </ul>
             `;
-        }
-
-        function obtenerPorcentajeIRPF(baseImponible) {
-            if (baseImponible <= 12450) return 19;
-            if (baseImponible <= 20200) return 24;
-            if (baseImponible <= 35200) return 30;
-            if (baseImponible <= 60000) return 37;
-            return 45;
         }
 
         // Inicializar campos al cargar
